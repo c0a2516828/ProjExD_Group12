@@ -14,10 +14,14 @@ class Chat:
     """
     ゲーム画面に出力させる文字を出力
     """
-    def __init__(self):
-        pass
-    def sent(self, massage):
-        pass
+    def __init__(self, screen):
+        self.screen = screen
+        self.font = pg.font.SysFont("meiryo", 32)
+    def sent(self, message):
+        pg.draw.rect(self.screen, (0, 0, 0), (0, HEIGHT - 80, WIDTH, 80))
+        text = self.font.render(message, True, (255, 255, 255))
+        self.screen.blit(text, (20, HEIGHT - 55))
+        pg.display.update()
 
 class Event:
     """
@@ -30,8 +34,10 @@ class Event:
         pass
 
 class Player:
-    def __init__(self):
-        pass
+    def __init__(self, atk, hp, max_hp):
+        self.atk = atk
+        self.hp = hp
+        self.max_hp = max_hp
     def action():
         pass
     def winBounus():
@@ -45,6 +51,21 @@ class Enemy:
     def action():
         pass
 
+class TreasureChest:
+    def __init__(self):
+        self.chesNum = random.randint(0, 1)
+    def getTreasure(self, Player_attack, Player_hp, Player_max_hp, scene, chat):
+        if self.chesNum == 0:
+            attack = random.randint(10, 15)
+            Player_attack = attack
+            chat.sent(f"攻撃力が{attack}アップした！")
+        if self.chesNum == 1:
+            hp = random.randint(50, 80)
+            Player_max_hp += hp
+            Player_hp += hp
+            chat.sent(f"HPが{hp}回復した！")
+        scene = "select_action"
+
 
 def main():
     pg.display.set_caption("ゲーム")
@@ -52,6 +73,8 @@ def main():
     bg_img = pg.image.load(f"IMG_2090.jpg")
     scene = "null"
     stage = 0
+    chat = Chat(screen)
+    treasureChest = TreasureChest(chat)
 
     while True:
         for event in pg.event.get():
@@ -70,6 +93,8 @@ def main():
             Player.winBounus()
         elif scene == "select_action":
             Event.select()
+        elif scene == "treasure_chest":
+            treasureChest.getTreasure(Player.atk, Player.hp, screen, chat)
         elif scene == "finish":
             continue
 
