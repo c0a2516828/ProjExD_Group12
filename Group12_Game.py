@@ -53,6 +53,9 @@ class Enemy:
         self.x = (WIDTH - self.image.get_width()) // 2
         self.y = 0
 
+        # 貯め攻撃用
+        self.charge_turn = 0
+
     @staticmethod
     def apper():
         """
@@ -68,20 +71,48 @@ class Enemy:
             enemy = Enemy("廃れた像", 10, 10,"IMG_廃れた像.jpg")
         elif r < 0.95:
             # 15%
-            enemy = Enemy("黄金像", 300, 100,"IMG_黄金像.jpg")
+            # 黄金像の強化処理
+            base_hp = 300
+            base_atk = 50
+
+            Enemy.golden_count = 0
+
+            hp = base_hp * (2**Enemy.golden_count)
+            atk = base_atk * (2**Enemy.golden_count)
+
+            Enemy.golden_count += 1
+
+            enemy = Enemy("黄金像", hp, atk, "IMG_黄金像.jpg")
         else:
             # 5%
             enemy = Enemy("退学馬", 10000, 0,"IMG_退学馬.jpg", special=True)
 
-        Chat.sent(f"{enemy.name} が現れた！ HP:{enemy.hp} ATK:{enemy.atk}")
+        Chat.sent(f"{enemy.name} が現れた！")
         return enemy
 
     def action(self, player):
         """
-        敵の行動（攻撃）
+        敵の行動（攻撃・回復・貯め攻撃）
         """
-        Chat.sent(f"{self.name} の攻撃！ {self.atk} ダメージ！")
-        player.hp -= self.atk
+        # 特殊敵は攻撃しない
+        if self.special:
+            Chat.sent(f"{self.name} はこちらを見つめている…")
+            return
+
+        # 行動をランダム選択
+        act = random.choice(["attack", "heal"])
+
+        # 通常攻撃
+        if act == "attack":
+            dmg = self.atk
+            Chat.sent(f"{self.name} の攻撃！ {dmg} ダメージ！")
+            player.hp -= dmg
+
+        # 回復（自分のHPの半分回復)
+        elif act == "heal":
+            heal_amount = self.hp // 4
+            self.hp += heal_amount
+            Chat.sent(f"{self.name} は{heal_amount}回復した！")
 
 def main():
     pg.display.set_caption("ゲーム")
