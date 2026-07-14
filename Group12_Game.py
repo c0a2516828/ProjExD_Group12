@@ -23,15 +23,36 @@ class Chat:
         self.screen.blit(text, (20, HEIGHT - 55))
         pg.display.update()
 
+
 class Event:
     """
     戦闘をするか宝箱を取るか選択する。
     どちらが出るかはランダム
     """
     def __init__(self):
-        pass
-    def select():
-        pass
+        # 90% 戦闘のみ、10% 戦闘 + 宝箱
+        self.mode = "battle_only" if random.random() < 0.9 else "battle_or_treasure"
+
+    def select(self):
+        keys = pg.key.get_pressed()
+        chat = Chat()
+
+        # 90% 戦闘のみ
+        if self.mode == "battle_only":
+            chat.sent("戦闘: F")
+            if keys[pg.K_f]:
+                return "battle_myTurn"
+            return "select_action"
+        
+        # 10% 戦闘 + 宝箱
+        else:
+            chat.sent("戦闘: F 宝箱: T")
+            if keys[pg.K_f]:
+                return "battle_myTurn"
+            if keys[pg.K_t]:
+                return "treasure_chest"
+            return "select_action"
+
 
 class Player:
     """
@@ -253,8 +274,10 @@ def main():
             Enemy.action()
         elif scene == "finish_battle":
             Bonus.reward(Player)
+            event = Event()
+            scene = "select_action"
         elif scene == "select_action":
-            Event.select()
+            scene = event.select()
         elif scene == "treasure_chest":
             treasureChest.getTreasure(Player.atk, Player.hp, screen, scene, chat)
         elif scene == "finish":
