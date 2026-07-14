@@ -34,14 +34,74 @@ class Event:
         pass
 
 class Player:
-    def __init__(self, atk, hp, max_hp):
-        self.atk = atk
+    """
+    プレイヤーキャラクターを管理するクラス
+    """
+    def __init__(self, hp=100, atk=20):
+        self.max_hp = hp
         self.hp = hp
-        self.max_hp = max_hp
-    def action():
-        pass
-    def winBounus():
-        pass
+        self.atk = atk
+        self.is_defending = False
+        self.is_buffed = False
+
+    def action(self, enemy, command):
+        """
+        プレイヤーの行動処理
+        command: 1(攻撃), 2(防御), 3(自己強化)
+        """
+        self.is_defending = False
+
+        if command == 1:
+            return self._attack(enemy)
+        elif command == 2:
+            return self._defend()
+        elif command == 3:
+            return self._buff()
+        else:
+            Chat.sent("無効なコマンドです。")
+            return
+
+    def _attack(self, enemy):
+        Chat.sent("プレイヤーの攻撃！")
+
+        # 乱数によるダメージ変動（0.8倍〜1.2倍のブレ）
+        variance = random.uniform(0.8, 1.2)
+        dmg = int(self.atk * variance)
+
+        if self.is_buffed:
+            dmg = int(dmg * 2.5)
+            self.is_buffed = False
+            Chat.sent(f"自己強化によりダメージが {dmg} にアップ！")
+
+        result = enemy.attacked(dmg)
+        return result
+
+    def _defend(self):
+        Chat.sent("プレイヤーは防御の態勢をとった！")
+        self.is_defending = True
+        return
+
+    def _buff(self):
+        Chat.sent("プレイヤーは力を溜めている…！次の攻撃力が2.5倍！")
+        self.is_buffed = True
+        return
+
+    def take_damage(self, dmg):
+        """
+        敵から攻撃を受ける際の処理
+        """
+        if self.is_defending:
+            dmg = int(dmg * 0.5)
+            Chat.sent("防御によりダメージを半減した！")
+
+        self.hp -= dmg
+        Chat.sent(f"プレイヤーに {dmg} ダメージ！ 残りHP:{self.hp}")
+
+        if self.hp <= 0:
+            Chat.sent("プレイヤーは倒れた…")
+            return
+        return
+
 
 class Enemy:
     def __init__(self):
@@ -84,7 +144,7 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
-        
+
         if scene == "start":
             continue
         elif scene == "battle_myTurn":
@@ -111,3 +171,4 @@ if __name__ == "__main__":
     main()
     pg.quit()
     sys.exit()
+
